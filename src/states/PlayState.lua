@@ -61,13 +61,13 @@ function PlayState:enter(params)
     self.level = params.level
 
     -- spawn a board and place it toward the right
-    self.board = params.board or Board(VIRTUAL_WIDTH - 272, 16)
+    self.board = params.board or Board(VIRTUAL_WIDTH - 272, 16, self.level)
 
     -- grab score from params if it was passed
     self.score = params.score or 0
 
     -- score we have to reach to get to the next level
-    self.scoreGoal = self.level * 1.25 * 1000
+    self.scoreGoal = self.level * 1.25 * 10
 end
 
 function PlayState:update(dt)
@@ -194,8 +194,12 @@ function PlayState:calculateMatches()
 
         -- add score for each match
         for k, match in pairs(matches) do
-            self.score = self.score + #match * 50
-            self.timer = self.timer + #match
+            for _, tile in pairs(match) do
+                -- Adds score depending on variety and combo multiplier with number of matches
+                self.score = self.score + tile.variety * 50 * #matches
+                -- Adds time depending on variety
+                self.timer = self.timer + tile.variety
+            end
         end
 
         -- remove any tiles that matched from the board, making empty spaces

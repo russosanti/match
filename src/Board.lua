@@ -13,12 +13,24 @@
 
 Board = Class{}
 
-function Board:init(x, y)
+function Board:init(x, y, level)
     self.x = x
     self.y = y
+    self.level = level or 1
     self.matches = {}
+    self.colorPool = self:getColorPool()
 
     self:initializeTiles()
+end
+
+-- Get max Tile variety based on level. Starts on level 3 and increses every 2 levels til 6
+function Board:getMaxTileVariety()
+    return math.min(6, math.floor((self.level + 1) / 2))
+end
+
+-- Creates a new Tile. Used when generating board and creating falling tiles
+function Board:createTile(x, y)
+    return Tile(x, y, self.colorPool[math.random(#self.colorPool)], math.random(self:getMaxTileVariety()))
 end
 
 function Board:initializeTiles()
@@ -31,16 +43,19 @@ function Board:initializeTiles()
 
         for tileX = 1, 8 do
             
-            -- create a new tile at X,Y with a random color and variety
-            table.insert(self.tiles[tileY], Tile(tileX, tileY, math.random(18), math.random(6)))
-        end
-    end
+            local tile = self:createTile(tileX, tileY)
 
-    while self:calculateMatches() do
-        
-        -- recursively initialize if matches were returned so we always have
-        -- a matchless board on start
-        self:initializeTiles()
+            -- Check and fix any initial matches on the board by regenerating the tile if it is in a match
+            while (tileX >= 3 and self.tiles[tileY][tileX - 1].color == tile.color and
+                   self.tiles[tileY][tileX - 2].color == tile.color) or
+                  (tileY >= 3 and self.tiles[tileY - 1][tileX].color == tile.color and
+                   self.tiles[tileY - 2][tileX].color == tile.color) do
+
+                tile = self:createTile(tileX, tileY)
+            end 
+            -- create a new tile at X,Y with a random color and variety
+            table.insert(self.tiles[tileY], tile)
+        end
     end
 end
 
@@ -240,7 +255,7 @@ function Board:getFallingTiles()
             if not tile then
 
                 -- new tile with random color and variety
-                local tile = Tile(x, y, math.random(18), math.random(6))
+                local tile = self:createTile(x, y)
                 tile.y = -32
                 self.tiles[y][x] = tile
 
@@ -261,4 +276,23 @@ function Board:render()
             self.tiles[y][x]:render(self.x, self.y)
         end
     end
+end
+
+function Board:getColorPool()
+    local colors = {}
+
+    -- table with all the colors
+    for i = 1, 18 do
+        table.insert(colors, i)
+    end
+
+    local colorPool = {}
+    local maxColors = math.min(7, 3 + math.floor(self.level / 2))
+
+    for i = 1, maxColors do
+        local color = math.random(#colors)
+        table.insert(colorPool, colors[color])
+        table.remove(colors, color)
+    end
+    return colorPool
 end
