@@ -29,11 +29,8 @@ function Tile:init(x, y, color, variety, special)
     self.special = special or false
 
     if special then
-        -- Particle system
+        -- Particle system for sparkle effect on special tiles
         self.psystem = love.graphics.newParticleSystem(gTextures['particle'], 200)
-        -- self.psystem:setParticleLifetime(0.5, 1)
-        -- give it an acceleration of anywhere between X1,Y1 and X2,Y2 (0, 0) and (80, 80) here
-        -- gives generally downward
         self.psystem:setParticleLifetime(0.4, 0.8)
         self.psystem:setEmissionRate(45)
         self.psystem:setSizes(0.45, 0.2)
