@@ -30,20 +30,12 @@ function Tile:init(x, y, color, variety, special)
 
     if special then
         -- Particle system for sparkle effect on special tiles
-        self.psystem = love.graphics.newParticleSystem(gTextures['particle'], 200)
-        self.psystem:setParticleLifetime(0.4, 0.8)
-        self.psystem:setEmissionRate(45)
-        self.psystem:setSizes(0.45, 0.2)
-        self.psystem:setSpeed(1, 6)
-        self.psystem:setLinearAcceleration(-3, -6, 3, 2)
-        self.psystem:setEmissionArea('uniform', 15, 15)
-        self.psystem:setColors(1, 1, 1, 0.9, 1, 1, 1, 0)
-        self.psystem:start()
+        self:startEffect()
     end
 end
 
 function Tile:update(dt)
-    if self.special then
+    if self.psystem then
         self.psystem:update(dt)
     end
 end
@@ -60,7 +52,23 @@ function Tile:render(x, y)
     love.graphics.draw(gTextures['main'], gFrames['tiles'][self.color][self.variety],
         self.x + x, self.y + y)
 
-    if self.special then
+    if self.psystem then
         love.graphics.draw(self.psystem, self.x + x + 16, self.y + y + 16)
     end
+end
+
+function Tile:startEffect()
+    self.psystem = love.graphics.newParticleSystem(gTextures['particle'], 200)
+    self.psystem:setParticleLifetime(0.4, 0.8)
+    self.psystem:setEmissionRate(45)
+    self.psystem:setSizes(0.45, 0.2)
+    self.psystem:setSpeed(1, 6)
+    self.psystem:setLinearAcceleration(-3, -6, 3, 2)
+    self.psystem:setEmissionArea('uniform', 15, 15)
+    self.psystem:setColors(1, 1, 1, 0.9, 1, 1, 1, 0)
+    self.psystem:start()
+end
+
+function Tile:startDestroyingEffect()
+    self:startEffect()
 end

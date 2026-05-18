@@ -94,10 +94,11 @@ function Board:calculateMatches()
                 -- if we have a match of 3 or more up to now, add it to our matches table
                 if matchNum >= 3 then
                     local match = {}
+                    match.tiles = {}
                     -- go backwards from here by matchNum
                     for x2 = x - 1, x - matchNum, -1 do
                         -- add each tile to the match that's in that match
-                        table.insert(match, self.tiles[y][x2])
+                        table.insert(match.tiles, self.tiles[y][x2])
                     end
 
                     -- add this match to our total matches table
@@ -116,10 +117,10 @@ function Board:calculateMatches()
         -- account for the last column ending with a match
         if matchNum >= 3 then
             local match = {}
-            
+            match.tiles = {}
             -- go backwards from end of last column by matchNum
             for x = 8, 8 - matchNum + 1, -1 do
-                table.insert(match, self.tiles[y][x])
+                table.insert(match.tiles, self.tiles[y][x])
             end
 
             table.insert(matches, match)
@@ -141,9 +142,9 @@ function Board:calculateMatches()
 
                 if matchNum >= 3 then
                     local match = {}
-
+                    match.tiles = {}
                     for y2 = y - 1, y - matchNum, -1 do
-                        table.insert(match, self.tiles[y2][x])
+                        table.insert(match.tiles, self.tiles[y2][x])
                     end
 
                     table.insert(matches, match)
@@ -161,10 +162,10 @@ function Board:calculateMatches()
         -- account for the last row ending with a match
         if matchNum >= 3 then
             local match = {}
-            
+            match.tiles = {}
             -- go backwards from end of last row by matchNum
             for y = 8, 8 - matchNum + 1, -1 do
-                table.insert(match, self.tiles[y][x])
+                table.insert(match.tiles, self.tiles[y][x])
             end
 
             table.insert(matches, match)
@@ -183,14 +184,26 @@ end
     Remove the matches from the Board by just setting the Tile slots within
     them to nil, then setting self.matches to nil.
 ]]
-function Board:removeMatches()
-    for k, match in pairs(self.matches) do
-        for k, tile in pairs(match) do
-            self.tiles[tile.gridY][tile.gridX] = nil
+function Board:removeMatches(onCompleteCallback)
+    for _, match in pairs(self.matches) do
+        if match.special then
+            for _, tile in pairs(match.tiles) do
+                tile:startDestroyingEffect()
+            end
         end
     end
 
-    self.matches = nil
+    Timer.after(0.5, function()
+        for _, match in pairs(self.matches) do
+            for _, tile in pairs(match.tiles) do
+                self.tiles[tile.gridY][tile.gridX] = nil
+            end
+        end
+        self.matches = nil
+        if onCompleteCallback then
+            onCompleteCallback()
+        end
+    end)
 end
 
 --[[
@@ -276,7 +289,9 @@ end
 function Board:update(dt)
     for y = 1, #self.tiles do
         for x = 1, #self.tiles[1] do
-            self.tiles[y][x]:update(dt)
+            if self.tiles[y][x] then
+                self.tiles[y][x]:update(dt)
+            end
         end
     end
 end
@@ -284,7 +299,9 @@ end
 function Board:render()
     for y = 1, #self.tiles do
         for x = 1, #self.tiles[1] do
-            self.tiles[y][x]:render(self.x, self.y)
+            if self.tiles[y][x] then
+                self.tiles[y][x]:render(self.x, self.y)
+            end
         end
     end
 end
@@ -325,18 +342,19 @@ function Board:expandSpecialMatches(matches)
         -- index-based loop is intentional: match grows while we iterate it.
         -- This allows chained special tiles found in added rows/columns to expand too.
         local index = 1
-        while index <= #match do
-            local tile = match[index]
+        while index <= #match.tiles do
+            local tile = match.tiles[index]
 
             if tile.special and not self:containsTile(checkedSpecials, tile) then
+                match.special = true
                 table.insert(checkedSpecials, tile)
 
                 -- add the whole row for this special tile
                 for x = 1, 8 do
                     local rowTile = self.tiles[tile.gridY][x]
 
-                    if rowTile and not self:containsTile(match, rowTile) then
-                        table.insert(match, rowTile)
+                    if rowTile and not self:containsTile(match.tiles, rowTile) then
+                        table.insert(match.tiles, rowTile)
                     end
                 end
 
@@ -344,8 +362,8 @@ function Board:expandSpecialMatches(matches)
                 for y = 1, 8 do
                     local columnTile = self.tiles[y][tile.gridX]
 
-                    if columnTile and not self:containsTile(match, columnTile) then
-                        table.insert(match, columnTile)
+                    if columnTile and not self:containsTile(match.tiles, columnTile) then
+                        table.insert(match.tiles, columnTile)
                     end
                 end
             end

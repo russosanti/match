@@ -195,7 +195,7 @@ function PlayState:calculateMatches()
 
         -- add score for each match
         for k, match in pairs(matches) do
-            for _, tile in pairs(match) do
+            for _, tile in pairs(match.tiles) do
                 -- Adds score depending on variety and combo multiplier with number of matches
                 self.score = self.score + tile.variety * 50 * #matches
                 -- Adds time depending on variety
@@ -204,18 +204,17 @@ function PlayState:calculateMatches()
         end
 
         -- remove any tiles that matched from the board, making empty spaces
-        self.board:removeMatches()
+        self.board:removeMatches(function ()
+            -- gets a table with tween values for tiles that should now fall
+            local tilesToFall = self.board:getFallingTiles()
 
-        -- gets a table with tween values for tiles that should now fall
-        local tilesToFall = self.board:getFallingTiles()
-
-        -- tween new tiles that spawn from the ceiling over 0.25s to fill in
-        -- the new upper gaps that exist
-        Timer.tween(0.25, tilesToFall):finish(function()
-            
-            -- recursively call function in case new matches have been created
-            -- as a result of falling blocks once new blocks have finished falling
-            self:calculateMatches()
+            -- tween new tiles that spawn from the ceiling over 0.25s to fill in
+            -- the new upper gaps that exist
+            Timer.tween(0.25, tilesToFall):finish(function()
+                -- recursively call function in case new matches have been created
+                -- as a result of falling blocks once new blocks have finished falling
+                self:calculateMatches()
+            end)
         end)
     
     -- if no matches, we can continue playing
