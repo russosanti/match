@@ -13,7 +13,7 @@
 
 Tile = Class{}
 
-function Tile:init(x, y, color, variety)
+function Tile:init(x, y, color, variety, special)
     
     -- board positions
     self.gridX = x
@@ -26,6 +26,29 @@ function Tile:init(x, y, color, variety)
     -- tile appearance/points
     self.color = color
     self.variety = variety
+    self.special = special or false
+
+    if special then
+        -- Particle system
+        self.psystem = love.graphics.newParticleSystem(gTextures['particle'], 200)
+        -- self.psystem:setParticleLifetime(0.5, 1)
+        -- give it an acceleration of anywhere between X1,Y1 and X2,Y2 (0, 0) and (80, 80) here
+        -- gives generally downward
+        self.psystem:setParticleLifetime(0.4, 0.8)
+        self.psystem:setEmissionRate(45)
+        self.psystem:setSizes(0.45, 0.2)
+        self.psystem:setSpeed(1, 6)
+        self.psystem:setLinearAcceleration(-3, -6, 3, 2)
+        self.psystem:setEmissionArea('uniform', 15, 15)
+        self.psystem:setColors(1, 1, 1, 0.9, 1, 1, 1, 0)
+        self.psystem:start()
+    end
+end
+
+function Tile:update(dt)
+    if self.special then
+        self.psystem:update(dt)
+    end
 end
 
 function Tile:render(x, y)
@@ -39,4 +62,8 @@ function Tile:render(x, y)
     love.graphics.setColor(255/255, 255/255, 255/255, 255/255)
     love.graphics.draw(gTextures['main'], gFrames['tiles'][self.color][self.variety],
         self.x + x, self.y + y)
+
+    if self.special then
+        love.graphics.draw(self.psystem, self.x + x + 16, self.y + y + 16)
+    end
 end

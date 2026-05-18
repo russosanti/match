@@ -30,6 +30,9 @@ end
 
 -- Creates a new Tile. Used when generating board and creating falling tiles
 function Board:createTile(x, y)
+    if x == 4 and y==4 then
+        return Tile(x, y, self.colorPool[math.random(#self.colorPool)], math.random(self:getMaxTileVariety()), true)
+    end
     return Tile(x, y, self.colorPool[math.random(#self.colorPool)], math.random(self:getMaxTileVariety()))
 end
 
@@ -69,6 +72,7 @@ function Board:calculateMatches()
 
     -- how many of the same color blocks in a row we've found
     local matchNum = 1
+    local specialMatch = false
 
     -- horizontal matches first
     for y = 1, 8 do
@@ -90,10 +94,8 @@ function Board:calculateMatches()
                 -- if we have a match of 3 or more up to now, add it to our matches table
                 if matchNum >= 3 then
                     local match = {}
-
                     -- go backwards from here by matchNum
                     for x2 = x - 1, x - matchNum, -1 do
-                        
                         -- add each tile to the match that's in that match
                         table.insert(match, self.tiles[y][x2])
                     end
@@ -168,7 +170,8 @@ function Board:calculateMatches()
             table.insert(matches, match)
         end
     end
-
+    -- Expans or explode the special tiles
+    matches = self:expandSpecialMatches(matches)
     -- store matches for later reference
     self.matches = matches
 
@@ -270,6 +273,14 @@ function Board:getFallingTiles()
     return tweens
 end
 
+function Board:update(dt)
+    for y = 1, #self.tiles do
+        for x = 1, #self.tiles[1] do
+            self.tiles[y][x]:update(dt)
+        end
+    end
+end
+
 function Board:render()
     for y = 1, #self.tiles do
         for x = 1, #self.tiles[1] do
@@ -295,4 +306,53 @@ function Board:getColorPool()
         table.remove(colors, color)
     end
     return colorPool
+end
+
+function Board:containsTile(match, tile)
+    for _, matchTile in pairs(match) do
+        if matchTile == tile then
+            return true
+        end
+    end
+
+    return false
+end
+
+function Board:expandSpecialMatches(matches)
+    for _, match in pairs(matches) do
+        local checkedSpecials = {}
+
+        -- index-based loop is intentional: match grows while we iterate it.
+        -- This allows chained special tiles found in added rows/columns to expand too.
+        local index = 1
+        while index <= #match do
+            local tile = match[index]
+
+            if tile.special and not self:containsTile(checkedSpecials, tile) then
+                table.insert(checkedSpecials, tile)
+
+                -- add the whole row for this special tile
+                for x = 1, 8 do
+                    local rowTile = self.tiles[tile.gridY][x]
+
+                    if rowTile and not self:containsTile(match, rowTile) then
+                        table.insert(match, rowTile)
+                    end
+                end
+
+                -- add the whole column for this special tile
+                for y = 1, 8 do
+                    local columnTile = self.tiles[y][tile.gridX]
+
+                    if columnTile and not self:containsTile(match, columnTile) then
+                        table.insert(match, columnTile)
+                    end
+                end
+            end
+
+            index = index + 1
+        end
+    end
+
+    return matches
 end
