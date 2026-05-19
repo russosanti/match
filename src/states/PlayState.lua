@@ -215,6 +215,9 @@ function PlayState:processMatches(matches)
     
     -- if no matches, we can continue playing
     else
+        if not self.board:hasAvailableMoves() then
+            self.board:shuffle()
+        end
         self.canInput = true
     end
 end
