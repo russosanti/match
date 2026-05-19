@@ -14,6 +14,7 @@
 Board = Class{}
 
 local SPECIAL_TILE_CHANCE = 0.01
+local MAX_COLORS = 16
 
 function Board:init(x, y, level)
     self.x = x
@@ -22,7 +23,7 @@ function Board:init(x, y, level)
     self.matches = {}
     self.colorPool = self:getColorPool()
 
-    self:initializeTiles()
+    self:generateBoard()
 end
 
 -- Get max Tile variety based on level. Starts on level 3 and increses every 2 levels til 6
@@ -38,16 +39,20 @@ function Board:createTile(x, y)
     return Tile(x, y, self.colorPool[math.random(#self.colorPool)], math.random(self:getMaxTileVariety()))
 end
 
+function Board:generateBoard()
+    repeat
+        self:initializeTiles()
+    until self:hasAvailableMoves()
+end
+
 function Board:initializeTiles()
     self.tiles = {}
 
     for tileY = 1, 8 do
-        
         -- empty table that will serve as a new row
         table.insert(self.tiles, {})
 
         for tileX = 1, 8 do
-            
             local tile = self:createTile(tileX, tileY)
 
             -- Check and fix any initial matches on the board by regenerating the tile if it is in a match
@@ -57,7 +62,7 @@ function Board:initializeTiles()
                    self.tiles[tileY - 2][tileX].color == tile.color) do
 
                 tile = self:createTile(tileX, tileY)
-            end 
+            end
             -- create a new tile at X,Y with a random color and variety
             table.insert(self.tiles[tileY], tile)
         end
@@ -326,7 +331,7 @@ function Board:getColorPool()
     end
 
     local colorPool = {}
-    local maxColors = math.min(7, 3 + math.floor(self.level / 2))
+    local maxColors = math.min(MAX_COLORS, 3 + math.floor(self.level / 2))
 
     for i = 1, maxColors do
         local color = math.random(#colors)
@@ -396,4 +401,45 @@ function Board:swapTiles(tileA, tileB)
 
     self.tiles[tileA.gridY][tileA.gridX] = tileA
     self.tiles[tileB.gridY][tileB.gridX] = tileB
+end
+
+function Board:hasAvailableMoves()
+    local matches = self.matches
+    for y = 1, 8 do
+        for x = 1, 8 do
+            local tile = self.tiles[y][x]
+            -- check right and down for possible swaps that would result in a matching
+            if x < 8 then
+                local otherTile = self.tiles[y][x + 1]
+                self:swapTiles(tile, otherTile)
+                if self:calculateMatches() then
+                    self:swapTiles(tile, otherTile)
+                    self.matches = matches
+                    return true
+                end
+                self:swapTiles(tile, otherTile)
+            end
+
+            if y < 8 then
+                local otherTile = self.tiles[y + 1][x]
+                self:swapTiles(tile, otherTile)
+                if self:calculateMatches() then
+                    self:swapTiles(tile, otherTile)
+                    self.matches = matches
+                    return true
+                end
+                self:swapTiles(tile, otherTile)
+            end
+        end
+    end
+    self.matches = matches
+    return false
+end
+
+-- Generate new board until there are no matches and there is at least one available move
+function Board:shuffle()
+    repeat
+        self:initializeTiles()
+    until not self:calculateMatches() and self:hasAvailableMoves()
+    self.matches = nil
 end
