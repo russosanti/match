@@ -385,3 +385,15 @@ function Board:expandSpecialMatches(matches)
 
     return matches
 end
+
+-- Swap tiles helper function
+function Board:swapTiles(tileA, tileB)
+    local tileAGridX, tileAGridY = tileA.gridX, tileA.gridY
+    local tileBGridX, tileBGridY = tileB.gridX, tileB.gridY
+
+    tileA.gridX, tileA.gridY = tileBGridX, tileBGridY
+    tileB.gridX, tileB.gridY = tileAGridX, tileAGridY
+
+    self.tiles[tileA.gridY][tileA.gridX] = tileA
+    self.tiles[tileB.gridY][tileB.gridX] = tileB
+end
