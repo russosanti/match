@@ -14,6 +14,7 @@
 Board = Class{}
 
 local SPECIAL_TILE_CHANCE = 0.01
+local MAX_COLORS = 16
 
 function Board:init(x, y, level)
     self.x = x
@@ -330,7 +331,7 @@ function Board:getColorPool()
     end
 
     local colorPool = {}
-    local maxColors = math.min(7, 3 + math.floor(self.level / 2))
+    local maxColors = math.min(MAX_COLORS, 3 + math.floor(self.level / 2))
 
     for i = 1, maxColors do
         local color = math.random(#colors)
@@ -409,23 +410,25 @@ function Board:hasAvailableMoves()
             local tile = self.tiles[y][x]
             -- check right and down for possible swaps that would result in a matching
             if x < 8 then
-                self:swapTiles(tile, self.tiles[y][x + 1])
+                local otherTile = self.tiles[y][x + 1]
+                self:swapTiles(tile, otherTile)
                 if self:calculateMatches() then
-                    self:swapTiles(tile, self.tiles[y][x + 1])
+                    self:swapTiles(tile, otherTile)
                     self.matches = matches
                     return true
                 end
-                self:swapTiles(tile, self.tiles[y][x + 1])
+                self:swapTiles(tile, otherTile)
             end
 
             if y < 8 then
-                self:swapTiles(tile, self.tiles[y + 1][x])
+                local otherTile = self.tiles[y + 1][x]
+                self:swapTiles(tile, otherTile)
                 if self:calculateMatches() then
-                    self:swapTiles(tile, self.tiles[y + 1][x])
+                    self:swapTiles(tile, otherTile)
                     self.matches = matches
                     return true
                 end
-                self:swapTiles(tile, self.tiles[y + 1][x])
+                self:swapTiles(tile, otherTile)
             end
         end
     end
