@@ -13,6 +13,8 @@
 
 Board = Class{}
 
+local SPECIAL_TILE_CHANCE = 0.01
+
 function Board:init(x, y, level)
     self.x = x
     self.y = y
@@ -30,7 +32,7 @@ end
 
 -- Creates a new Tile. Used when generating board and creating falling tiles
 function Board:createTile(x, y)
-    if x == 4 and y==4 then --TODO: change logic to randomly create special tile with low probability
+    if math.random() < SPECIAL_TILE_CHANCE then
         return Tile(x, y, self.colorPool[math.random(#self.colorPool)], math.random(self:getMaxTileVariety()), true)
     end
     return Tile(x, y, self.colorPool[math.random(#self.colorPool)], math.random(self:getMaxTileVariety()))
