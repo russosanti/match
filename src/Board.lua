@@ -185,15 +185,18 @@ end
     them to nil, then setting self.matches to nil.
 ]]
 function Board:removeMatches(onCompleteCallback)
+    local hasSpecialMatches = false
     for _, match in pairs(self.matches) do
         if match.special then
+            hasSpecialMatches = true
             for _, tile in pairs(match.tiles) do
                 tile:startDestroyingEffect()
             end
         end
     end
 
-    Timer.after(0.5, function()
+    -- Local function to remove matches found and call on callback function
+    local function finishRemoval()
         for _, match in pairs(self.matches) do
             for _, tile in pairs(match.tiles) do
                 self.tiles[tile.gridY][tile.gridX] = nil
@@ -203,7 +206,13 @@ function Board:removeMatches(onCompleteCallback)
         if onCompleteCallback then
             onCompleteCallback()
         end
-    end)
+    end
+
+    if hasSpecialMatches then
+        Timer.after(1.0, finishRemoval)
+    else
+        finishRemoval()
+    end
 end
 
 --[[
