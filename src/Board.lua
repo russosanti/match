@@ -364,7 +364,9 @@ function Board:expandSpecialMatches(matches)
             if tile.special and not self:containsTile(checkedSpecials, tile) then
                 match.special = true
                 table.insert(checkedSpecials, tile)
-
+                
+                -- If you wish to check only for the row or the column check the match x and y and apply only one
+                -- I decided to expand on botch row and column for more fun and interesting gameplay
                 -- add the whole row for this special tile
                 for x = 1, 8 do
                     local rowTile = self.tiles[tile.gridY][x]
@@ -403,6 +405,7 @@ function Board:swapTiles(tileA, tileB)
     self.tiles[tileB.gridY][tileB.gridX] = tileB
 end
 
+-- Checks if any posible swap would result in match
 function Board:hasAvailableMoves()
     local matches = self.matches
     for y = 1, 8 do

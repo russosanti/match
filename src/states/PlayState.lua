@@ -25,6 +25,7 @@ function PlayState:init()
 	-- position in the grid which we're highlighting
 	self.boardHighlightX = 0
 	self.boardHighlightY = 0
+    -- For reshufle animation
     self.boardAlpha = 1
 
 	-- timer used to switch the highlight rect's color
@@ -125,6 +126,8 @@ function PlayState:update(dt)
 
             self:selectTile(x, y)
 		end
+        
+        -- Mouse event handling
         local click = love.mouse.wasPressed(1)
         if click then
             local mouseX, mouseY = push.toGame(click.x, click.y)
@@ -189,7 +192,7 @@ function PlayState:processMatches(matches)
 	else
 		if not self.board:hasAvailableMoves() then
             self.canInput = false
-
+            -- Alpha animation on shuffle
             Timer.tween(0.25, {
                 [self] = { boardAlpha = 0 }
             }):finish(function()
