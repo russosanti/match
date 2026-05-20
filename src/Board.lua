@@ -312,11 +312,11 @@ function Board:update(dt)
     end
 end
 
-function Board:render()
+function Board:render(alpha)
     for y = 1, #self.tiles do
         for x = 1, #self.tiles[1] do
             if self.tiles[y][x] then
-                self.tiles[y][x]:render(self.x, self.y)
+                self.tiles[y][x]:render(self.x, self.y, alpha)
             end
         end
     end

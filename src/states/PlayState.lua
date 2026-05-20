@@ -25,6 +25,7 @@ function PlayState:init()
 	-- position in the grid which we're highlighting
 	self.boardHighlightX = 0
 	self.boardHighlightY = 0
+    self.boardAlpha = 1
 
 	-- timer used to switch the highlight rect's color
 	self.rectHighlighted = false
@@ -65,7 +66,7 @@ function PlayState:enter(params)
 	self.score = params.score or 0
 
 	-- score we have to reach to get to the next level
-	self.scoreGoal = self.level * 1.25 * 10000
+	self.scoreGoal = self.level * 1.25 * 200
 end
 
 function PlayState:update(dt)
@@ -187,15 +188,30 @@ function PlayState:processMatches(matches)
 	-- if no matches, we can continue playing
 	else
 		if not self.board:hasAvailableMoves() then
-			self.board:shuffle()
-		end
-		self.canInput = true
+            self.canInput = false
+
+            Timer.tween(0.25, {
+                [self] = { boardAlpha = 0 }
+            }):finish(function()
+                self.board:shuffle()
+
+                Timer.tween(0.25, {
+                    [self] = { boardAlpha = 1 }
+                }):finish(function()
+                    self.canInput = true
+                end)
+            end)
+		else
+		    self.canInput = true
+        end
 	end
 end
 
 function PlayState:render()
 	-- render board of tiles
-	self.board:render()
+    love.graphics.setColor(1, 1, 1, self.boardAlpha)
+	self.board:render(self.boardAlpha)
+    love.graphics.setColor(1, 1, 1, 1)
 
 	-- render highlighted tile if it exists
 	if self.highlightedTile then
