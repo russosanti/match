@@ -13,6 +13,9 @@
 
 Tile = Class{}
 
+-- Tile size in pixels
+TILE_SIZE = 32
+
 function Tile:init(x, y, color, variety, special)
     
     -- board positions

@@ -16,164 +16,135 @@
     main menu or the score entry menu if they made the top 10.
 ]]
 
-PlayState = Class{__includes = BaseState}
+PlayState = Class({ __includes = BaseState })
 
 function PlayState:init()
-    
-    -- start our transition alpha at full, so we fade in
-    self.transitionAlpha = 1
+	-- start our transition alpha at full, so we fade in
+	self.transitionAlpha = 1
 
-    -- position in the grid which we're highlighting
-    self.boardHighlightX = 0
-    self.boardHighlightY = 0
+	-- position in the grid which we're highlighting
+	self.boardHighlightX = 0
+	self.boardHighlightY = 0
 
-    -- timer used to switch the highlight rect's color
-    self.rectHighlighted = false
+	-- timer used to switch the highlight rect's color
+	self.rectHighlighted = false
 
-    -- flag to show whether we're able to process input (not swapping or clearing)
-    self.canInput = true
+	-- flag to show whether we're able to process input (not swapping or clearing)
+	self.canInput = true
 
-    -- tile we're currently highlighting (preparing to swap)
-    self.highlightedTile = nil
+	-- tile we're currently highlighting (preparing to swap)
+	self.highlightedTile = nil
 
-    self.score = 0
-    self.timer = 60
+	self.score = 0
+	self.timer = 60
 
-    -- set our Timer class to turn cursor highlight on and off
-    Timer.every(0.5, function()
-        self.rectHighlighted = not self.rectHighlighted
-    end)
+	-- set our Timer class to turn cursor highlight on and off
+	Timer.every(0.5, function()
+		self.rectHighlighted = not self.rectHighlighted
+	end)
 
-    -- subtract 1 from timer every second
-    Timer.every(1, function()
-        self.timer = self.timer - 1
+	-- subtract 1 from timer every second
+	Timer.every(1, function()
+		self.timer = self.timer - 1
 
-        -- play warning sound on timer if we get low
-        if self.timer <= 5 then
-            gSounds['clock']:play()
-        end
-    end)
+		-- play warning sound on timer if we get low
+		if self.timer <= 5 then
+			gSounds["clock"]:play()
+		end
+	end)
 end
 
 function PlayState:enter(params)
-    
-    -- grab level # from the params we're passed
-    self.level = params.level
+	-- grab level # from the params we're passed
+	self.level = params.level
 
-    -- spawn a board and place it toward the right
-    self.board = params.board or Board(VIRTUAL_WIDTH - 272, 16, self.level)
+	-- spawn a board and place it toward the right
+	self.board = params.board or Board(VIRTUAL_WIDTH - 272, 16, self.level)
 
-    -- grab score from params if it was passed
-    self.score = params.score or 0
+	-- grab score from params if it was passed
+	self.score = params.score or 0
 
-    -- score we have to reach to get to the next level
-    self.scoreGoal = self.level * 1.25 * 10000
+	-- score we have to reach to get to the next level
+	self.scoreGoal = self.level * 1.25 * 10000
 end
 
 function PlayState:update(dt)
-    if love.keyboard.wasPressed('escape') then
-        love.event.quit()
-    end
+	if love.keyboard.wasPressed("escape") then
+		love.event.quit()
+	end
 
-    -- go back to start if time runs out
-    if self.timer <= 0 then
-        
-        -- clear timers from prior PlayStates
-        Timer.clear()
-        
-        gSounds['game-over']:play()
+	-- go back to start if time runs out
+	if self.timer <= 0 then
+		-- clear timers from prior PlayStates
+		Timer.clear()
 
-        gStateMachine:change('game-over', {
-            score = self.score
-        })
-    end
+		gSounds["game-over"]:play()
 
-    -- go to next level if we surpass score goal
-    if self.score >= self.scoreGoal then
-        
-        -- clear timers from prior PlayStates
-        -- always clear before you change state, else next state's timers
-        -- will also clear!
-        Timer.clear()
+		gStateMachine:change("game-over", {
+			score = self.score,
+		})
+	end
 
-        gSounds['next-level']:play()
+	-- go to next level if we surpass score goal
+	if self.score >= self.scoreGoal then
+		-- clear timers from prior PlayStates
+		-- always clear before you change state, else next state's timers
+		-- will also clear!
+		Timer.clear()
 
-        -- change to begin game state with new level (incremented)
-        gStateMachine:change('begin-game', {
-            level = self.level + 1,
-            score = self.score
-        })
-    end
+		gSounds["next-level"]:play()
 
-    if self.canInput then
-        -- move cursor around based on bounds of grid, playing sounds
-        if love.keyboard.wasPressed('up') then
-            self.boardHighlightY = math.max(0, self.boardHighlightY - 1)
-            gSounds['select']:play()
-        elseif love.keyboard.wasPressed('down') then
-            self.boardHighlightY = math.min(7, self.boardHighlightY + 1)
-            gSounds['select']:play()
-        elseif love.keyboard.wasPressed('left') then
-            self.boardHighlightX = math.max(0, self.boardHighlightX - 1)
-            gSounds['select']:play()
-        elseif love.keyboard.wasPressed('right') then
-            self.boardHighlightX = math.min(7, self.boardHighlightX + 1)
-            gSounds['select']:play()
-        end
+		-- change to begin game state with new level (incremented)
+		gStateMachine:change("begin-game", {
+			level = self.level + 1,
+			score = self.score,
+		})
+	end
 
-        -- if we've pressed enter, to select or deselect a tile...
-        if love.keyboard.wasPressed('enter') or love.keyboard.wasPressed('return') then
+	if self.canInput then
+		-- move cursor around based on bounds of grid, playing sounds
+		if love.keyboard.wasPressed("up") then
+			self.boardHighlightY = math.max(0, self.boardHighlightY - 1)
+			gSounds["select"]:play()
+		elseif love.keyboard.wasPressed("down") then
+			self.boardHighlightY = math.min(7, self.boardHighlightY + 1)
+			gSounds["select"]:play()
+		elseif love.keyboard.wasPressed("left") then
+			self.boardHighlightX = math.max(0, self.boardHighlightX - 1)
+			gSounds["select"]:play()
+		elseif love.keyboard.wasPressed("right") then
+			self.boardHighlightX = math.min(7, self.boardHighlightX + 1)
+			gSounds["select"]:play()
+		end
 
-            local x = self.boardHighlightX + 1
-            local y = self.boardHighlightY + 1
-            
-            -- if nothing is highlighted, highlight current tile
-            if not self.highlightedTile then
-                self.highlightedTile = self.board.tiles[y][x]
+		-- if we've pressed enter, to select or deselect a tile...
+		if love.keyboard.wasPressed("enter") or love.keyboard.wasPressed("return") then
+			local x = self.boardHighlightX + 1
+			local y = self.boardHighlightY + 1
 
-            -- if we select the position already highlighted, remove highlight
-            elseif self.highlightedTile == self.board.tiles[y][x] then
-                self.highlightedTile = nil
+            self:selectTile(x, y)
+		end
+        local click = love.mouse.wasPressed(1)
+        if click then
+            local mouseX, mouseY = push.toGame(click.x, click.y)
 
-            -- if the difference between X and Y combined of this highlighted tile
-            -- vs the previous is not equal to 1, also remove highlight
-            elseif math.abs(self.highlightedTile.gridX - x) + math.abs(self.highlightedTile.gridY - y) > 1 then
-                gSounds['error']:play()
-                self.highlightedTile = nil
-            else
-
-                local newTile = self.board.tiles[y][x]
-                self.canInput = false
-                self.board:swapTiles(self.highlightedTile, newTile)
-
-                -- tween coordinates between the two so they swap
-                Timer.tween(0.1, {
-                    [self.highlightedTile] = {x = newTile.x, y = newTile.y},
-                    [newTile] = {x = self.highlightedTile.x, y = self.highlightedTile.y}
-                })    
-                -- once the swap is finished, we can tween falling blocks as needed
-                :finish(function()
-                    local matches = self.board:calculateMatches()
-                    if matches then
-                        self:processMatches(matches)
-                    else
-                        gSounds['error']:play()
-                        self.board:swapTiles(self.highlightedTile, newTile)
-                        Timer.tween(0.1, {
-                            [self.highlightedTile] = {x = newTile.x, y = newTile.y},
-                            [newTile] = {x = self.highlightedTile.x, y = self.highlightedTile.y}
-                        }):finish(function()
-                            self.canInput = true
-                            self.highlightedTile = nil
-                        end)
-                    end
-                end)
+            -- check if mouse click was within board bounds
+            if mouseX >= self.board.x and mouseX <= self.board.x + 256 and mouseY >= self.board.y and mouseY <= self.board.y + 256 then
+                -- Convert coordinates to tile coordinates
+                local x = math.floor((mouseX - self.board.x) / TILE_SIZE) + 1
+                local y = math.floor((mouseY - self.board.y) / TILE_SIZE) + 1
+                if x >= 1 and x <= 8 and y >= 1 and y <= 8 then
+                    self.boardHighlightX = x - 1
+                    self.boardHighlightY = y - 1
+                    gSounds["select"]:play()
+                    self:selectTile(x, y)
+                end
             end
         end
-    end
+	end
 
-    Timer.update(dt)
-    self.board:update(dt)
+	Timer.update(dt)
+	self.board:update(dt)
 end
 
 --[[
@@ -183,83 +154,139 @@ end
     to the Board class.
 ]]
 function PlayState:processMatches(matches)
-    self.highlightedTile = nil
-    
-    if matches then
-        gSounds['match']:stop()
-        gSounds['match']:play()
+	self.highlightedTile = nil
 
-        -- add score for each match
-        for k, match in pairs(matches) do
-            for _, tile in pairs(match.tiles) do
-                -- Adds score depending on variety and combo multiplier with number of matches
-                self.score = self.score + tile.variety * 50 * #matches
-                -- Adds time depending on variety
-                self.timer = self.timer + tile.variety
-            end
-        end
+	if matches then
+		gSounds["match"]:stop()
+		gSounds["match"]:play()
 
-        -- remove any tiles that matched from the board, making empty spaces
-        self.board:removeMatches(function ()
-            -- gets a table with tween values for tiles that should now fall
-            local tilesToFall = self.board:getFallingTiles()
+		-- add score for each match
+		for k, match in pairs(matches) do
+			for _, tile in pairs(match.tiles) do
+				-- Adds score depending on variety and combo multiplier with number of matches
+				self.score = self.score + tile.variety * 50 * #matches
+				-- Adds time depending on variety
+				self.timer = self.timer + tile.variety
+			end
+		end
 
-            -- tween new tiles that spawn from the ceiling over 0.25s to fill in
-            -- the new upper gaps that exist
-            Timer.tween(0.25, tilesToFall):finish(function()
-                -- recursively call function in case new matches have been created
-                -- as a result of falling blocks once new blocks have finished falling
-                self:processMatches(self.board:calculateMatches())
-            end)
-        end)
-    
-    -- if no matches, we can continue playing
-    else
-        if not self.board:hasAvailableMoves() then
-            self.board:shuffle()
-        end
-        self.canInput = true
-    end
+		-- remove any tiles that matched from the board, making empty spaces
+		self.board:removeMatches(function()
+			-- gets a table with tween values for tiles that should now fall
+			local tilesToFall = self.board:getFallingTiles()
+
+			-- tween new tiles that spawn from the ceiling over 0.25s to fill in
+			-- the new upper gaps that exist
+			Timer.tween(0.25, tilesToFall):finish(function()
+				-- recursively call function in case new matches have been created
+				-- as a result of falling blocks once new blocks have finished falling
+				self:processMatches(self.board:calculateMatches())
+			end)
+		end)
+
+	-- if no matches, we can continue playing
+	else
+		if not self.board:hasAvailableMoves() then
+			self.board:shuffle()
+		end
+		self.canInput = true
+	end
 end
 
 function PlayState:render()
-    -- render board of tiles
-    self.board:render()
+	-- render board of tiles
+	self.board:render()
 
-    -- render highlighted tile if it exists
-    if self.highlightedTile then
-        
-        -- multiply so drawing white rect makes it brighter
-        love.graphics.setBlendMode('add')
+	-- render highlighted tile if it exists
+	if self.highlightedTile then
+		-- multiply so drawing white rect makes it brighter
+		love.graphics.setBlendMode("add")
 
-        love.graphics.setColor(1, 1, 1, 96/255)
-        love.graphics.rectangle('fill', (self.highlightedTile.gridX - 1) * 32 + (VIRTUAL_WIDTH - 272),
-            (self.highlightedTile.gridY - 1) * 32 + 16, 32, 32, 4)
+		love.graphics.setColor(1, 1, 1, 96 / 255)
+		love.graphics.rectangle(
+			"fill",
+			(self.highlightedTile.gridX - 1) * 32 + (VIRTUAL_WIDTH - 272),
+			(self.highlightedTile.gridY - 1) * 32 + 16,
+			32,
+			32,
+			4
+		)
 
-        -- back to alpha
-        love.graphics.setBlendMode('alpha')
-    end
+		-- back to alpha
+		love.graphics.setBlendMode("alpha")
+	end
 
-    -- render highlight rect color based on timer
-    if self.rectHighlighted then
-        love.graphics.setColor(217/255, 87/255, 99/255, 1)
-    else
-        love.graphics.setColor(172/255, 50/255, 50/255, 1)
-    end
+	-- render highlight rect color based on timer
+	if self.rectHighlighted then
+		love.graphics.setColor(217 / 255, 87 / 255, 99 / 255, 1)
+	else
+		love.graphics.setColor(172 / 255, 50 / 255, 50 / 255, 1)
+	end
 
-    -- draw actual cursor rect
-    love.graphics.setLineWidth(4)
-    love.graphics.rectangle('line', self.boardHighlightX * 32 + (VIRTUAL_WIDTH - 272),
-        self.boardHighlightY * 32 + 16, 32, 32, 4)
+	-- draw actual cursor rect
+	love.graphics.setLineWidth(4)
+	love.graphics.rectangle(
+		"line",
+		self.boardHighlightX * 32 + (VIRTUAL_WIDTH - 272),
+		self.boardHighlightY * 32 + 16,
+		32,
+		32,
+		4
+	)
 
-    -- GUI text
-    love.graphics.setColor(56/255, 56/255, 56/255, 234/255)
-    love.graphics.rectangle('fill', 16, 16, 186, 116, 4)
+	-- GUI text
+	love.graphics.setColor(56 / 255, 56 / 255, 56 / 255, 234 / 255)
+	love.graphics.rectangle("fill", 16, 16, 186, 116, 4)
 
-    love.graphics.setColor(99/255, 155/255, 1, 1)
-    love.graphics.setFont(gFonts['medium'])
-    love.graphics.printf('Level: ' .. tostring(self.level), 20, 24, 182, 'center')
-    love.graphics.printf('Score: ' .. tostring(self.score), 20, 52, 182, 'center')
-    love.graphics.printf('Goal : ' .. tostring(self.scoreGoal), 20, 80, 182, 'center')
-    love.graphics.printf('Timer: ' .. tostring(self.timer), 20, 108, 182, 'center')
+	love.graphics.setColor(99 / 255, 155 / 255, 1, 1)
+	love.graphics.setFont(gFonts["medium"])
+	love.graphics.printf("Level: " .. tostring(self.level), 20, 24, 182, "center")
+	love.graphics.printf("Score: " .. tostring(self.score), 20, 52, 182, "center")
+	love.graphics.printf("Goal : " .. tostring(self.scoreGoal), 20, 80, 182, "center")
+	love.graphics.printf("Timer: " .. tostring(self.timer), 20, 108, 182, "center")
+end
+
+function PlayState:selectTile(x, y)
+	-- if nothing is highlighted, highlight current tile
+	if not self.highlightedTile then
+		self.highlightedTile = self.board.tiles[y][x]
+
+		-- if we select the position already highlighted, remove highlight
+	elseif self.highlightedTile == self.board.tiles[y][x] then
+		self.highlightedTile = nil
+
+		-- if the difference between X and Y combined of this highlighted tile
+		-- vs the previous is not equal to 1, also remove highlight
+	elseif math.abs(self.highlightedTile.gridX - x) + math.abs(self.highlightedTile.gridY - y) > 1 then
+		gSounds["error"]:play()
+		self.highlightedTile = nil
+	else
+		local newTile = self.board.tiles[y][x]
+		self.canInput = false
+		self.board:swapTiles(self.highlightedTile, newTile)
+
+		-- tween coordinates between the two so they swap
+		Timer
+			.tween(0.1, {
+				[self.highlightedTile] = { x = newTile.x, y = newTile.y },
+				[newTile] = { x = self.highlightedTile.x, y = self.highlightedTile.y },
+			})
+			-- once the swap is finished, we can tween falling blocks as needed
+			:finish(function()
+				local matches = self.board:calculateMatches()
+				if matches then
+					self:processMatches(matches)
+				else
+					gSounds["error"]:play()
+					self.board:swapTiles(self.highlightedTile, newTile)
+					Timer.tween(0.1, {
+						[self.highlightedTile] = { x = newTile.x, y = newTile.y },
+						[newTile] = { x = self.highlightedTile.x, y = self.highlightedTile.y },
+					}):finish(function()
+						self.canInput = true
+						self.highlightedTile = nil
+					end)
+				end
+			end)
+	end
 end
